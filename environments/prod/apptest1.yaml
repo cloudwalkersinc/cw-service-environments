@@ -1,0 +1,75 @@
+# Production environment - apptest1 flavor
+replicaCount: 2
+
+image:
+  repository: cloudwalkersinc/paved-road-service
+  pullPolicy: IfNotPresent
+  tag: ''  # Kargo will inject the tag
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+
+env:
+  - name: ENVIRONMENT
+    value: 'production'
+  - name: FLAVOR
+    value: 'apptest1'
+  - name: LOG_LEVEL
+    value: 'warn'
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials-prod-apptest1
+        key: url
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 75
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+ingress:
+  enabled: true
+  className: 'nginx'
+  annotations:
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+  hosts:
+    - host: apptest1.paved-road.cloudwalkersinc.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: paved-road-apptest1-tls
+      hosts:
+        - apptest1.paved-road.cloudwalkersinc.com
