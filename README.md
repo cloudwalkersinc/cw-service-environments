@@ -1,6 +1,6 @@
-# Paved Road Service - Configuration
+# Service - Configuration
 
-Environment-specific configuration values for the paved-road-service deployment across all environments and flavors.
+Environment-specific configuration values for the service deployment across all environments and flavors.
 
 ## Repository Purpose
 
